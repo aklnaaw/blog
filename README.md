@@ -83,63 +83,58 @@ git push -u origin main
 4. 点击 **Save**
 5. 等待 1-2 分钟，你的页面将在 `https://你的用户名.github.io/你的仓库名/` 上线
 
-## ⚡ 腾讯云 CDN 加速配置
+## ⚡ Cloudflare 加速配置（推荐）
 
-由于 GitHub Pages 在国内访问速度较慢，推荐使用腾讯云 CDN 或 EdgeOne 加速。
+由于 GitHub Pages 在国内访问速度一般，推荐使用 Cloudflare 免费套餐加速，全球节点覆盖，**无需 ICP 备案**，配置仅需几分钟。
 
-> ⚠️ **重要前提：ICP 备案**
-> 使用中国大陆 CDN 加速服务需要域名已完成 **ICP 备案**。如果域名未备案，请先通过腾讯云或阿里云等服务商提交备案申请（通常需要 5-20 个工作日）。如果域名不方便备案，可跳过此节，直接使用 GitHub Pages 原链访问。
+### 方案 A：Cloudflare 代理（免费，推荐）
 
-### 方案 A：腾讯云 EdgeOne（推荐）
+1. **将域名托管到 Cloudflare**
+   - 登录 [Cloudflare 仪表盘](https://dash.cloudflare.com)
+   - 点击 **Add a site**，输入你的域名
+   - 选择 **Free** 计划
+   - 按照提示将域名的 DNS 服务器改为 Cloudflare 指定的 NS 地址
 
-[EdgeOne](https://cloud.tencent.com/product/teo) 是腾讯云的边缘安全加速平台，配置更简单。
+2. **添加 DNS 记录**
+   - 在 Cloudflare DNS 设置页面，添加一条 **CNAME** 记录：
+     - 名称：`www`（或你想要的子域名）
+     - 目标：`你的用户名.github.io`
+     - 代理状态：开启橙色云朵 ⚡（Proxied）
+   - 如果需要根域名（如 `example.com`）：
+     - 类型选择 **CNAME**，名称填 `@`
+     - 或者用 **A 记录** 指向 GitHub Pages 的 IP：`185.199.108.153` / `185.199.109.153` / `185.199.110.153` / `185.199.111.153`
 
-1. **登录腾讯云控制台** → 搜索 "EdgeOne"
-2. **创建站点**
-   - 填写你的自定义域名（例如 `thanks.yourdomain.com`）
-   - 选择加速区域（全球/中国大陆/境外）
-3. **添加源站**
-   - 源站类型选择 **「源站域名」**
-   - 填写你的 GitHub Pages 地址（`你的用户名.github.io`）
-   - 端口保持默认 443（HTTPS）
-4. **DNS 解析**
-   - 在域名 DNS 管理后台，添加一个 CNAME 记录
-   - 主机记录：`thanks`
-   - 记录值：EdgeOne 提供的 CNAME 地址
-5. **HTTPS 配置**
-   - 在 EdgeOne 中申请或上传 SSL 证书
-   - 开启 **强制 HTTPS**
-6. **缓存规则**（可选）
-   - 静态文件（html, js, css）建议缓存 7-30 天
+3. **开启 HTTPS**
+   - Cloudflare 仪表盘 → **SSL/TLS** → **概述**
+   - SSL 加密等级选择 **Full （strict）**（需要源站也有证书，GitHub Pages 默认支持）
+   - 开启 **Always Use HTTPS**（始终强制 HTTPS）
 
-### 方案 B：腾讯云 CDN
+4. **设置缓存规则（可选）**
+   - **SSL/TLS** → **Edge Certificates** → **Always Use HTTPS**：开启
+   - **Rules** → **Page Rules**：
+     - 规则：`你的域名.com/*.js` → **Cache Level：Standard** + **Edge Cache TTL：a month**
+     - 规则：`你的域名.com/*.css` → **Cache Level：Standard** + **Edge Cache TTL：a month**
+     - 规则：`你的域名.com/index.html` → **Cache Level：Standard** + **Edge Cache TTL：1 day**
 
-1. **登录腾讯云控制台** → 搜索 "CDN"
-2. **添加域名**
-   - 填写你的自定义域名
-   - 加速区域按需选择
-3. **源站配置**
-   - 源站类型：**源站域名**
-   - 源站地址：`你的用户名.github.io`
-   - 回源协议：HTTPS
-4. **HTTPS 配置**
-   - 上传/申请 SSL 证书
-   - 开启 HTTPS 强制跳转
-5. **缓存配置**
-   - 业务类型：静态加速
-   - 文件类型缓存规则中添加：`index.html` 缓存 1 天，`.js` 缓存 30 天
+5. **可选：开启 Cloudflare Web Analytics**
+   - Cloudflare 仪表盘 → **Analytics & Logs** → **Web Analytics**
+   - 添加站点，免费使用，无需在页面嵌入任何脚本
 
-### 验证 CDN 生效
+### 方案 B：GitHub Pages + 自定义域名
+
+如果你不需要 CDN 加速，也可直接配置 GitHub Pages 自定义域名：
+
+1. 在仓库 **Settings** → **Pages** → **Custom domain** 输入你的域名
+2. 在域名 DNS 管理后台添加一条 CNAME 记录指向 `你的用户名.github.io`
+3. 开启 **Enforce HTTPS**（GitHub 会自动申请 Let's Encrypt 证书）
+
+### 验证加速生效
 
 ```bash
-# 查看 DNS 解析
-dig thanks.yourdomain.com
-
-# 或者使用 curl 测试
-curl -I https://thanks.yourdomain.com
+curl -I https://你的域名
 ```
 
-响应头中出现 `X-Cache-Lookup: Hit From ` 或类似标记说明 CDN 已生效。
+响应头中出现 `CF-Cache-Status: HIT` 或 `Server: cloudflare` 即表示 Cloudflare 代理已生效。
 
 ## 📝 本地预览
 
@@ -155,7 +150,7 @@ curl -I https://thanks.yourdomain.com
 ## 🧩 技术栈
 
 - 纯 HTML + CSS + JavaScript（零外部依赖）
-- Canvas 2D 粒子系统和五彩纸屑
+- Canvas 2D 粒子系统和光点爆炸
 - CSS `backdrop-filter` 毛玻璃效果
 - Intersection Observer 滚动动画
 - CSS 3D Transform 倾角交互
