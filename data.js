@@ -49,7 +49,7 @@ const THANK_YOU_LIST = [
     role: '👨‍💻 开发和维护',
     message: '负责项目的日常开发和维护工作，持续优化和修复',
     category: 'contributor',
-    avatar: 'aklnaaw.png'
+    avatar: '头像/aklnaaw.png'
   },
 
   // -------- 特别感谢 --------
