@@ -87,6 +87,9 @@ git push -u origin main
 
 由于 GitHub Pages 在国内访问速度较慢，推荐使用腾讯云 CDN 或 EdgeOne 加速。
 
+> ⚠️ **重要前提：ICP 备案**
+> 使用中国大陆 CDN 加速服务需要域名已完成 **ICP 备案**。如果域名未备案，请先通过腾讯云或阿里云等服务商提交备案申请（通常需要 5-20 个工作日）。如果域名不方便备案，可跳过此节，直接使用 GitHub Pages 原链访问。
+
 ### 方案 A：腾讯云 EdgeOne（推荐）
 
 [EdgeOne](https://cloud.tencent.com/product/teo) 是腾讯云的边缘安全加速平台，配置更简单。
