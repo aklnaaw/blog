@@ -58,7 +58,7 @@ const THANK_YOU_LIST = [
     role: '⚡ CDN 加速',
     message: '感谢 Cloudflare 提供的全球 CDN 网络加速服务，让访问更快更稳定',
     category: 'special',
-    avatar: ''
+    avatar: 'https://www.cloudflare.com/favicon.ico'
   },
   {
     name: '开源社区',
