@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ 致谢名单</title>
+
+  <!-- ===== 数据文件（必须先加载） ===== -->
+  <script src="data.js"></script>
+
+  <style>
+    /* ================================================
+       0. CSS 自定义属性（主题色）
+       ================================================ */
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.10);
+      --glass-hover-border: rgba(255, 255, 255, 0.25);
+      --accent-primary: #6366f1;
+      --accent-secondary: #a78bfa;
+      --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+    }
+
+    /* ================================================
+       1. 重置 & 基础
+       ================================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ================================================
+       2. 粒子画布（背景）
+       ================================================ */
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ================================================
+       3. 主容器
+       ================================================ */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* ================================================
+       4. 头部（打字机标题）
+       ================================================ */
+    .header {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .header__title {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      min-height: 1.3em;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid var(--accent-primary);
+      width: 0;
+      animation: none; /* JS 驱动 */
+    }
+    .header__title.typing-done {
+      border-right-color: transparent;
+    }
+
+    .header__subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      margin-top: 16px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .header__subtitle.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ================================================
+       5. 分类筛选标签
+       ================================================ */
+    .filters {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 48px;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      background: var(--glass-bg);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      user-select: none;
+    }
+    .filter-btn:hover {
+      border-color: var(--glass-hover-border);
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.10);
+    }
+    .filter-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* ================================================
+       6. 统计信息
+       ================================================ */
+    .stats {
+      text-align: center;
+      margin-bottom: 40px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    .stats span {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ================================================
+       7. 卡片网格
+       ================================================ */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    /* ================================================
+       8. 致谢卡片（毛玻璃）
+       ================================================ */
+    .card {
+      position: relative;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transform-style: preserve-3d;
+      perspective: 800px;
+      cursor: default;
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+    }
+    .card.revealed {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .card.hidden {
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+      position: absolute;
+      /* 用 visibility + absolute 占位不占空间 */
+      visibility: hidden;
+    }
+
+    .card:hover {
+      border-color: var(--glass-hover-border);
+      box-shadow: var(--shadow-glow), 0 8px 32px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    /* 卡片顶部发光线条 */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      border-radius: 2px;
+    }
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    /* 卡片内容 */
+    .card__avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 16px;
+      border: 2px solid var(--glass-border);
+      transition: border-color 0.3s ease;
+    }
+    .card:hover .card__avatar {
+      border-color: var(--accent-primary);
+    }
+
+    /* 自动生成的头像 */
+    .card__avatar-auto {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      border: 2px solid var(--glass-border);
+      transition: border-color 0.3s ease;
+    }
+    .card:hover .card__avatar-auto {
+      border-color: var(--accent-primary);
+    }
+
+    .card__name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .card__role {
+      font-size: 0.85rem;
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .card__message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .card__category-tag {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+    }
+
+    /* ================================================
+       9. 空状态
+       ================================================ */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-secondary);
+      grid-column: 1 / -1;
+    }
+    .empty-state__icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    .empty-state__text {
+      font-size: 1.1rem;
+    }
+
+    /* ================================================
+       10. 页脚
+       ================================================ */
+    .footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+    .footer a {
+      color: var(--accent-primary);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ================================================
+       11. 光点爆炸容器（Canvas）
+       ================================================ */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    /* ================================================
+       12. 响应式
+       ================================================ */
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 16px 60px;
+      }
+      .header {
+        padding: 50px 0 40px;
+      }
+      .card-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .card {
+        padding: 22px 18px;
+      }
+      .filter-btn {
+        padding: 6px 14px;
+        font-size: 0.82rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header__title {
+        font-size: 1.5rem;
+        white-space: normal; /* 小屏允许换行 */
+      }
+    }
+
+    /* ================================================
+       13. 滚动条美化
+       ================================================ */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 粒子背景 ===== -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- ===== 光点爆炸（上层） ===== -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ===== 主容器 ===== -->
+  <div class="container">
+
+    <!-- 头部 -->
+    <header class="header">
+      <h1 class="header__title" id="typewriter-title"></h1>
+      <p class="header__subtitle" id="subtitle">感谢每一位陪伴与付出的人 💫</p>
+    </header>
+
+    <!-- 分类筛选 -->
+    <div class="filters" id="filters"></div>
+
+    <!-- 统计 -->
+    <div class="stats" id="stats"></div>
+
+    <!-- 卡片网格 -->
+    <div class="card-grid" id="card-grid"></div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>Made with ❤️ · 感谢名单持续更新中</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // ============================================================
+    //  1. 辅助工具
+    // ============================================================
+
+    /** 生成随机整数 [min, max] */
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    /** 生成随机颜色（亮色系） */
+    function randColor() {
+      const colors = ['#6366f1', '#a78bfa', '#f472b6', '#34d399', '#60a5fa', '#fbbf24', '#f87171'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    /** 根据名字首字生成头像背景色 */
+    function nameColor(name) {
+      const chars = '0123456789abcdef';
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      const c = 'hsl(' + (hash % 360) + ', 60%, 50%)';
+      return c;
+    }
+
+    // ============================================================
+    //  2. 粒子系统
+    // ============================================================
+    (function initParticles() {
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H;
+      const particles = [];
+      const PARTICLE_COUNT = window.innerWidth < 768 ? 80 : 160;
+      const CONNECT_DIST = 120;
+      const MOUSE_RADIUS = 150;
+
+      let mouse = { x: -1000, y: -1000, active: false };
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = rand(0, W);
+          this.y = rand(0, H);
+          this.vx = rand(-0.4, 0.4);
+          this.vy = rand(-0.4, 0.4);
+          this.r = rand(1.5, 3);
+          this.alpha = rand(0.3, 0.8);
+          this.color = randColor();
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // 鼠标交互
+          if (mouse.active) {
+            const dx = this.x - mouse.x;
+            const dy = this.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS) {
+              const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+              this.x += dx * force * 0.02;
+              this.y += dy * force * 0.02;
+            }
+          }
+
+          // 边界回弹
+          if (this.x < 0 || this.x > W) this.vx *= -1;
+          if (this.y < 0 || this.y > H) this.vy *= -1;
+          // 边界修正
+          this.x = Math.max(0, Math.min(W, this.x));
+          this.y = Math.max(0, Math.min(H, this.y));
+        }
+        draw() {
+          ctx.globalAlpha = this.alpha;
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+      }
+
+      // 鼠标跟踪
+      document.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        mouse.active = true;
+      });
+      document.addEventListener('mouseleave', () => { mouse.active = false; });
+      // 触摸支持
+      document.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        if (t) { mouse.x = t.clientX; mouse.y = t.clientY; mouse.active = true; }
+      }, { passive: true });
+      document.addEventListener('touchend', () => { mouse.active = false; });
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // 画粒子
+        for (const p of particles) {
+          p.update();
+          p.draw();
+        }
+
+        // 画连线
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i], b = particles[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < CONNECT_DIST) {
+              ctx.globalAlpha = (1 - dist / CONNECT_DIST) * 0.2;
+              ctx.strokeStyle = '#a78bfa';
+              ctx.lineWidth = 0.6;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+    })();
+
+    // ============================================================
+    //  3. 打字机效果
+    // ============================================================
+    (function typewriter() {
+      const el = document.getElementById('typewriter-title');
+      const text = '✨ 致 谢 名 单 ✨';
+      const subtitle = document.getElementById('subtitle');
+      let i = 0;
+      const speed = 120; // ms/字
+
+      // 先设置初始宽度
+      el.style.width = '0';
+
+      function type() {
+        if (i < text.length) {
+          el.textContent += text.charAt(i);
+          i++;
+          // 动态调整宽度以适配打字机光标
+          el.style.width = (el.scrollWidth) + 'px';
+          setTimeout(type, speed);
+        } else {
+          el.classList.add('typing-done');
+          // 副标题淡入
+          setTimeout(() => {
+            subtitle.classList.add('visible');
+          }, 300);
+        }
+      }
+
+      // 页面加载后开始打字
+      // 等数据都准备好
+      if (document.readyState === 'complete') {
+        setTimeout(type, 300);
+      } else {
+        window.addEventListener('load', () => setTimeout(type, 300));
+      }
+    })();
+
+    // ============================================================
+    //  4. 渲染卡片 & 分类标签
+    // ============================================================
+    (function renderApp() {
+      const grid = document.getElementById('card-grid');
+      const filtersEl = document.getElementById('filters');
+      const statsEl = document.getElementById('stats');
+
+      let currentCategory = 'all';
+
+      // ---- 4a. 渲染分类按钮 ----
+      function renderFilters() {
+        let html = '';
+        for (const [key, cat] of Object.entries(CATEGORIES)) {
+          const active = key === currentCategory ? 'active' : '';
+          html += `<button class="filter-btn ${active}" data-category="${key}" style="--btn-color:${cat.color}">${cat.label}</button>`;
+        }
+        filtersEl.innerHTML = html;
+
+        // 绑定点击事件
+        filtersEl.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const cat = btn.dataset.category;
+            if (cat === currentCategory) return;
+            currentCategory = cat;
+            // 更新按钮状态
+            filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // 重新渲染卡片
+            renderCards(true);
+          });
+        });
+      }
+
+      // ---- 4b. 渲染卡片 ----
+      function renderCards(isFiltering) {
+        const items = THANK_YOU_LIST.filter(item => {
+          return currentCategory === 'all' || item.category === currentCategory;
+        });
+
+        // 更新统计
+        const total = THANK_YOU_LIST.length;
+        const shown = items.length;
+        statsEl.innerHTML = `共 <span>${total}</span> 人 · 当前显示 <span>${shown}</span> 人`;
+
+        if (items.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">🔍</div>
+              <p class="empty-state__text">该分类暂无致谢对象</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        for (let idx = 0; idx < items.length; idx++) {
+          const item = items[idx];
+          const catInfo = CATEGORIES[item.category] || CATEGORIES.all;
+
+          // 头像
+          let avatarHtml;
+          if (item.avatar) {
+            avatarHtml = `<img class="card__avatar" src="${item.avatar}" alt="${item.name}" loading="lazy">`;
+          } else {
+            const initial = item.name.charAt(0);
+            const bgColor = nameColor(item.name);
+            avatarHtml = `<div class="card__avatar-auto" style="background:${bgColor}">${initial}</div>`;
+          }
+
+          html += `
+            <div class="card" data-index="${idx}" style="transition-delay: ${idx * 0.06}s">
+              ${avatarHtml}
+              <div class="card__name">${item.name}</div>
+              ${item.role ? `<div class="card__role">${item.role}</div>` : ''}
+              ${item.message ? `<div class="card__message">${item.message}</div>` : ''}
+              <div class="card__category-tag" style="border-color:${catInfo.color};color:${catInfo.color}">${catInfo.label}</div>
+            </div>
+          `;
+        }
+        grid.innerHTML = html;
+
+        // ---- 滚动揭示 Intersection Observer ----
+        const cards = grid.querySelectorAll('.card');
+        const observer = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+              observer.unobserve(entry.target);
+            }
+          }
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        for (const card of cards) {
+          observer.observe(card);
+        }
+
+        // ---- 3D 鼠标倾角 ----
+        cards.forEach(card => {
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateY = ((x - centerX) / centerX) * 8;  // 最大 ±8°
+            const rotateX = -((y - centerY) / centerY) * 8;
+            card.style.transform = card.classList.contains('revealed')
+              ? `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`
+              : '';
+          });
+          card.addEventListener('mouseleave', () => {
+            const revealed = card.classList.contains('revealed');
+            card.style.transform = revealed ? 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)' : '';
+          });
+        });
+
+        // 如果是分类切换，触发射 confetti
+        if (isFiltering) {
+          fireConfetti();
+        }
+      }
+
+      // ---- 4c. 光点爆炸 ----
+      function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const dots = [];
+        const COUNT = 80;
+
+        for (let i = 0; i < COUNT; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = rand(2, 8);
+          dots.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: rand(1.5, 4),
+            color: randColor(),
+            alpha: 1,
+            decay: rand(0.008, 0.025)
+          });
+        }
+
+        // 额外中心辉光
+        const glow = {
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          r: 3,
+          alpha: 1,
+          growing: true
+        };
+
+        let animId;
+
+        function drawDots() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // 中心辉光
+          if (glow.alpha > 0) {
+            const grd = ctx.createRadialGradient(glow.x, glow.y, 0, glow.x, glow.y, glow.r);
+            grd.addColorStop(0, `rgba(167, 139, 250, ${glow.alpha * 0.6})`);
+            grd.addColorStop(1, `rgba(167, 139, 250, 0)`);
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(glow.x, glow.y, glow.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (glow.growing) {
+              glow.r += 0.8;
+              glow.alpha -= 0.015;
+              if (glow.r > 80) glow.growing = false;
+            } else {
+              glow.alpha -= 0.03;
+            }
+          }
+
+          // 光点
+          let alive = false;
+          for (const d of dots) {
+            if (d.alpha <= 0) continue;
+            d.x += d.vx;
+            d.y += d.vy;
+            d.vx *= 0.98;
+            d.vy *= 0.98;
+            d.alpha -= d.decay;
+
+            // 发光光晕
+            const grd = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 3);
+            grd.addColorStop(0, `rgba(255, 255, 255, ${d.alpha * 0.8})`);
+            grd.addColorStop(0.2, d.color.replace(')', `, ${d.alpha * 0.5})`).replace('rgb', 'rgba'));
+            grd.addColorStop(1, `rgba(0, 0, 0, 0)`);
+
+            ctx.globalAlpha = Math.max(0, d.alpha);
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r * 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 核心亮点
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, d.alpha * 0.9)})`;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (d.alpha > 0) alive = true;
+          }
+
+          ctx.globalAlpha = 1;
+          if (alive || glow.alpha > 0) {
+            animId = requestAnimationFrame(drawDots);
+          } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (animId) cancelAnimationFrame(animId);
+          }
+        }
+
+        drawDots();
+      }
+
+      // ---- 初始化 ----
+      renderFilters();
+      renderCards(false);
+
+      // 页面加载完成后发射一波五彩纸屑
+      window.addEventListener('load', () => {
+        setTimeout(fireConfetti, 1000);
+      });
+
+      // 暴露给调试
+      window.fireConfetti = fireConfetti;
+
+    })();
+
+    // ============================================================
+    //  5. 窗口 resize 防抖（重绘 confetti canvas 尺寸）
+    // ============================================================
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        if (confettiCanvas) {
+          confettiCanvas.width = window.innerWidth;
+          confettiCanvas.height = window.innerHeight;
+        }
+      }, 200);
+    });
+  </script>
+
+</body>
+</html>
