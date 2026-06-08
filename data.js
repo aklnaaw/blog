@@ -54,9 +54,9 @@ const THANK_YOU_LIST = [
 
   // -------- 特别感谢 --------
   {
-    name: '腾讯云 EdgeOne',
-    role: '⚡ 边缘加速',
-    message: '感谢提供的 CDN 加速服务，为国内外用户带来流畅的访问体验',
+    name: 'Cloudflare',
+    role: '⚡ CDN 加速',
+    message: '感谢 Cloudflare 提供的全球 CDN 网络加速服务，让访问更快更稳定',
     category: 'special',
     avatar: ''
   },
