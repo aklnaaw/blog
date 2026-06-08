@@ -52,6 +52,14 @@ const THANK_YOU_LIST = [
     avatar: '头像/aklnaaw.png'
   },
 
+  // -------- 赞助者 --------
+  {
+    name: '烤炉',
+    message: '感谢烤炉的大力支持！🔥',
+    category: 'sponsor',
+    avatar: '头像/烤炉.jpg'
+  },
+
   // -------- 特别感谢 --------
   {
     name: 'Cloudflare',
